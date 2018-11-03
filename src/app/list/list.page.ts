@@ -1,12 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Injectable } from '@angular/core';
+import { Http } from '@angular/http';
+import 'rxjs/add/operator/map';
 
+@Injectable()
 @Component({
   selector: 'app-list',
   templateUrl: 'list.page.html',
-  styleUrls: ['list.page.scss']
+  styleUrls: ['list.page.scss'],
+  providers: [  ]
 })
+
 export class ListPage implements OnInit {
-  private selectedItem: any;
+
   private icons = [
     'flask',
     'wifi',
@@ -19,16 +24,16 @@ export class ListPage implements OnInit {
     'bluetooth',
     'build'
   ];
-  public items: Array<{ title: string; note: string; icon: string }> = [];
-  constructor() {
-    for (let i = 1; i < 11; i++) {
-      this.items.push({
-        title: 'Item ' + i,
-        note: 'This is item #' + i,
-        icon: this.icons[Math.floor(Math.random() * this.icons.length)]
-      });
-    }
-  }
+
+
+  constructor(
+    public http: Http,
+   ) { 
+    this.http.get('https://www.reddit.com/r/gifs/new/.json?limit=10').map(res => res.json()).subscribe(data => {
+      console.log(data.data.children);
+    });
+  } 
+
 
   ngOnInit() {
   }
@@ -37,3 +42,5 @@ export class ListPage implements OnInit {
   //   this.router.navigate(['/list', JSON.stringify(item)]);
   // }
 }
+
+

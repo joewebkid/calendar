@@ -27,9 +27,8 @@
 .item-divider-wrapper {
 	color: #9E9E9E;
 }
-a {
-	text-decoration: none;
-	color: #000;
+.item h3 {
+	margin-top: 0;
 }
 .overflow__text {
 	width: 100%;
@@ -37,19 +36,4 @@ a {
 	display: block;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	text-decoration: none;
-}
-
-.categories-card {
-      position: relative; 
-      overflow: hidden;
-      border-radius: 10px;
-      width: 74px !important;
-      height: 60px !important;
-      display: inline-block;
-      margin: 7.5px !important;
-      box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
-    }
-    .categories-card .button-effect {
-  z-index: 1;
 }

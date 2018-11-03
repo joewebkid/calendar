@@ -1,27 +1,79 @@
 <ion-header>
-  <ion-toolbar>
+  <ion-toolbar color="primary">
+
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
+<!--     <ion-buttons slot="start"> 
+      <ion-back-button defaultHref="home"></ion-back-button> 
+    </ion-buttons> -->
     <ion-title>
       List
     </ion-title>
   </ion-toolbar>
+
 </ion-header>
 
 <ion-content>
-  <ion-list>
-    <ion-item *ngFor="let item of items">
-      <ion-icon [name]="item.icon" slot="start"></ion-icon>
-      {{item.title}}
-      <div class="item-note" slot="end">
-        {{item.note}}
+  <ion-item-group>
+    <ion-item-divider color="light">17:30</ion-item-divider>
+
+    <ion-item class="danger">
+      <a routerLink="/item/2">
+        <div class="list_wraper">
+          <strong>Бобот сотоварищи</strong>
+          <div class="overflow__text"> 
+            <p> 17:30 - 18:30, Зал "СИТИУС" - ЗА ЖИЗНЬ</p>
+          </div>
+        </div>
+      </a>
+
+    </ion-item>
+
+    <ion-item class="interesting">
+      <div class="list_wraper">
+        <strong>Бобот сотоварищи</strong>
+        <div> 
+          <p> 17:30 - 18:30, Главный экран</p>
+        </div>
       </div>
     </ion-item>
-  </ion-list>
-  <!--
-    <div *ngIf="selectedItem" padding>
-      You navigated here from <b>{{selectedItem.title }}</b>
-    </div>
-  -->
+    <ion-item class="default">
+      <div class="list_wraper">
+        <strong>Бобот сотоварищи</strong>
+        <div> 
+          <p> 17:30 - 18:30, Главный экран</p>
+        </div>
+      </div>
+    </ion-item>
+  </ion-item-group>
+  <ion-item-group>
+    <ion-item-divider color="light">19:30</ion-item-divider>
+    <ion-item class="danger">
+
+        <div class="list_wraper">
+          <strong>Бобот сотоварищи</strong>
+          <div class="overflow__text"> 
+            <p> 17:30 - 18:30, Зал "СИТИУС" - ЗА ЖИЗНЬ</p>
+          </div>
+        </div>
+
+    </ion-item>
+    <ion-item class="interesting">
+      <div class="list_wraper">
+        <strong>Бобот сотоварищи</strong>
+        <div> 
+          <p> 17:30 - 18:30, Главный экран</p>
+        </div>
+      </div>
+    </ion-item>
+    <ion-item class="default">
+      <div class="list_wraper">
+        <strong>Бобот сотоварищи</strong>
+        <div> 
+          <p> 17:30 - 18:30, Главный экран</p>
+        </div>
+      </div>
+    </ion-item>
+  </ion-item-group>
 </ion-content>
