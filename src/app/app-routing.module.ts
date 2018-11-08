@@ -4,21 +4,33 @@ import { Routes, RouterModule } from '@angular/router';
 const routes: Routes = [
   {
     path: '',
-    redirectTo: 'home',
+    redirectTo: 'list',
     pathMatch: 'full'
   },
   {
     path: 'home',
-    loadChildren: './home/home.module#HomePageModule'
+    loadChildren: '../pages/home/home.module#HomePageModule'
   },
   {
     path: 'list',
-    loadChildren: './list/list.module#ListPageModule'
+    loadChildren: '../pages/list/list.module#ListPageModule'
   },
   {
     path: 'item/:id',
-    loadChildren: './item/item.module#ItemPageModule'
-  }
+    loadChildren: '../pages/item/item.module#ItemPageModule'
+  },
+  { 
+    path: 'search', 
+    loadChildren: '../pages/search/search.module#SearchPageModule' 
+  },
+  { 
+    path: 'about', 
+    loadChildren: '../pages/about/about.module#AboutPageModule' 
+  },
+  { path: 'favorites', loadChildren: '../pages/favorites/favorites.module#FavoritesPageModule' },
+  { path: 'map', loadChildren: '../pages/map/map.module#MapPageModule' },
+  { path: 'snonsors', loadChildren: '../pages/snonsors/snonsors.module#SnonsorsPageModule' },
+  { path: 'schema', loadChildren: '../pages/schema/schema.module#SchemaPageModule' }
 ];
 
 @NgModule({

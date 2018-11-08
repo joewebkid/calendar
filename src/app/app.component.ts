@@ -10,15 +10,38 @@ import { StatusBar } from '@ionic-native/status-bar/ngx';
 })
 export class AppComponent {
   public appPages = [
+    // {
+    //   title: 'Home',
+    //   url: '/home',
+    //   icon: 'home'
+    // },
     {
-      title: 'Home',
-      url: '/home',
-      icon: 'home'
-    },
-    {
-      title: 'List',
+      title: 'Расписание',
       url: '/list',
       icon: 'list'
+    }
+  ];
+
+  public infoPages = [
+    {
+      title: 'Карта',
+      url: '/map',
+      icon: 'map'
+    },
+    {
+      title: 'Спонсоры',
+      url: '/sponsors',
+      icon: 'ribbon'
+    },
+    {
+      title: 'Схема проезда',
+      url: '/schema',
+      icon: 'navigate'
+    },
+    {
+      title: 'О приложении',
+      url: '/about',
+      icon: 'information-circle'
     }
   ];
 

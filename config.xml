@@ -84,5 +84,8 @@
     <plugin name="cordova-plugin-advanced-http" spec="2.0.1" />
     <plugin name="cordova-plugin-statusbar" spec="2.4.2" />
     <plugin name="cordova-sqlite-storage" spec="2.5.1" />
+    <allow-navigation href="http://192.168.1.33:8100" sessionid="55a28c7d" />
     <plugin name="cordova-plugin-secure-storage" spec="3.0.0" />
+    <engine name="browser" spec="5.0.4" />
+    <engine name="android" spec="7.1.1" />
 </widget>
