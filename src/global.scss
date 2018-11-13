@@ -23,7 +23,7 @@ ion-header {
 // --background: #fff;
 // --ion-color-base: #fff !important;
 }
-ion-item-divider {
+ion-item-divider.light {
     font-weight: 600;
     color: #777;
 }
@@ -57,6 +57,8 @@ ion-header::not(.blue__header) ion-title {
     right: 15px;
     // font-size: 25px;
     top: 20px;   
+    --box-shadow:0;
+    color: #a0a0a0;
 }
 .star ion-icon {
     font-size: 20px;

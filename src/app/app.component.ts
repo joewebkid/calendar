@@ -16,6 +16,11 @@ export class AppComponent {
     //   icon: 'home'
     // },
     {
+      title: 'Расписание ver.2',
+      url: '/home',
+      icon: 'home'
+    },
+    {
       title: 'Расписание',
       url: '/list',
       icon: 'list'
