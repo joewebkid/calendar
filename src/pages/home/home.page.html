@@ -1,0 +1,131 @@
+<ion-header>
+  <ion-toolbar color="">
+
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-buttons slot="end">
+      <ion-button routerLink="/search">
+        <ion-icon name="search"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+<!--     <ion-buttons slot="start"> 
+      <ion-back-button defaultHref="home"></ion-back-button> 
+    </ion-buttons> color="primary" -->
+    <ion-title>
+      Расписание
+    </ion-title>
+  </ion-toolbar>
+  <ion-toolbar color="" class="days">
+
+    <ion-buttons slot="start">
+      <ion-button>
+        <ion-badge color="light">
+          СБ 1
+        </ion-badge>
+      </ion-button>
+      <ion-button>
+        <div>ВС</div>
+        <div>2</div>
+      </ion-button>
+    </ion-buttons>
+
+  </ion-toolbar>
+
+    <ion-item>
+      <ion-label>Тема</ion-label>
+      <ion-select [interfaceOptions]="customPopoverOptions" interface="popover" placeholder="Select One" value="Игры" (ionChange)="changeCategory($event)">
+        <ion-select-option value="1" style=" border-left: 3px solid #F44336; ">Игры</ion-select-option>
+        <ion-select-option value="2">Open-source</ion-select-option>
+        <ion-select-option value="3">Разное</ion-select-option>
+        <ion-select-option value="4">BIM-секция</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+
+
+</ion-header>
+
+<ion-content>
+
+
+<!--   <ion-refresher [disabled]="false" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher> -->
+
+  <ion-item-group>
+    <ion-item-divider color="danger">Игры</ion-item-divider>
+	  <ion-item-group *ngFor="let key of events; let i = index">
+	    <ion-item-divider color="light">{{key}}</ion-item-divider>
+
+	    <ion-item *ngFor="let ev of eventsArr[key]" style="--padding-start: 0; --inner-padding-end: 0px;">
+	      <!-- <a routerLink="/item/{{ev.id}}"> -->
+	        <ion-item routerLink="/item/{{ev.id}}" class="no-padding-suka" style=" --border-color: rgba(var(--ion-item-border-color-rgb, 0, 0, 0), 0);width: 100%;padding: 0!important;">
+	          <div class="list_wraper">
+	            <strong>{{ev.name}}</strong>
+	              
+	            <div class="overflow__text">
+	              <p> {{ev.time_start}} - {{ev.time_end}}, Зал "{{halls[ev.hall_id]}}" - {{halls_theme[ev.hall_id]}}</p>
+	            </div>
+	          </div>
+	        </ion-item>
+	        <ion-button class="like button button-clear hydrated" (click)="likeIt($item,ev.id)" >
+	          <ion-icon name="heart-empty"></ion-icon>  
+	        </ion-button>
+	      <!-- </a> -->
+	    </ion-item>
+
+	  </ion-item-group>
+	</ion-item-group>
+
+  <ion-item-group>
+    <ion-item-divider color="primary">Open-source</ion-item-divider>
+		  <ion-item-group *ngFor="let key of events; let i = index">
+		    <ion-item-divider color="light">{{key}}</ion-item-divider>
+
+		    <ion-item *ngFor="let ev of eventsArr[key]" style="--padding-start: 0; --inner-padding-end: 0px;">
+		      <!-- <a routerLink="/item/{{ev.id}}"> -->
+		        <ion-item routerLink="/item/{{ev.id}}" class="no-padding-suka" style=" --border-color: rgba(var(--ion-item-border-color-rgb, 0, 0, 0), 0);width: 100%;padding: 0!important;">
+		          <div class="list_wraper">
+		            <strong>{{ev.name}}</strong>
+		              
+		            <div class="overflow__text">
+		              <p> {{ev.time_start}} - {{ev.time_end}}, Зал "{{halls[ev.hall_id]}}" - {{halls_theme[ev.hall_id]}}</p>
+		            </div>
+		          </div>
+		        </ion-item>
+		        <ion-button class="like button button-clear hydrated" (click)="likeIt($item,ev.id)" >
+		          <ion-icon name="heart-empty"></ion-icon>  
+		        </ion-button>
+		      <!-- </a> -->
+		    </ion-item>
+
+		  </ion-item-group>
+		</ion-item-group>
+
+  <ion-item-group>
+    <ion-item-divider color="warning">Разное</ion-item-divider>
+	  <ion-item-group *ngFor="let key of events; let i = index">
+	    <ion-item-divider color="light">{{key}}</ion-item-divider>
+
+	    <ion-item *ngFor="let ev of eventsArr[key]" style="--padding-start: 0; --inner-padding-end: 0px;">
+	      <!-- <a routerLink="/item/{{ev.id}}"> -->
+	        <ion-item routerLink="/item/{{ev.id}}" class="no-padding-suka" style=" --border-color: rgba(var(--ion-item-border-color-rgb, 0, 0, 0), 0);width: 100%;padding: 0!important;">
+	          <div class="list_wraper">
+	            <strong>{{ev.name}}</strong>
+	              
+	            <div class="overflow__text">
+	              <p> {{ev.time_start}} - {{ev.time_end}}, Зал "{{halls[ev.hall_id]}}" - {{halls_theme[ev.hall_id]}}</p>
+	            </div>
+	          </div>
+	        </ion-item>
+	        <ion-button class="like button button-clear hydrated" (click)="likeIt($item,ev.id)" >
+	          <ion-icon name="heart-empty"></ion-icon>  
+	        </ion-button>
+	      <!-- </a> -->
+	    </ion-item>
+
+	  </ion-item-group>
+	</ion-item-group>
+
+</ion-content>

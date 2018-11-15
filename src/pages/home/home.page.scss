@@ -1,0 +1,42 @@
+
+.list_wraper {
+  border-left: 3px solid #FFF;
+    
+    margin-top: 10px;
+    padding-left: 10px;
+    margin-bottom: 10px;
+}
+.danger .list_wraper {
+  border-left: 3px solid #F44336;
+}
+.interesting .list_wraper {
+  border-left: 3px solid #3880ff;
+}
+.warning .list_wraper {
+  border-left: 3px solid #FF5722;
+}
+.default .list_wraper {
+  border-left: 3px solid #32db64;
+}
+.list_wraper p {
+  margin-top: 10px;
+  margin-bottom: 0;    
+  font-size: 14px;
+    color: #484848;
+}
+.item-divider-wrapper {
+  color: #9E9E9E;
+}
+.item h3 {
+  margin-top: 0;
+}
+.overflow__text {
+  width: 100%;
+  overflow: hidden;
+  display: block;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.star__inner {
+  border-bottom: 1px solid #eee;
+}

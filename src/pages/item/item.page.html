@@ -1,0 +1,53 @@
+<ion-header>
+  <ion-toolbar color="">
+    <ion-buttons slot="start"> 
+      <ion-back-button defaultHref="list"></ion-back-button> 
+    </ion-buttons>
+    <ion-title>
+     {{ event.name }}<!-- {{id}} -->
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+
+	<ion-item-group>
+		<div>
+			<ion-title padding-start padding-top>{{ event.name }}</ion-title>
+			<div padding-start padding-top>декабря 01, {{ event.time_start }} - {{ event.time_end }}</div>
+			<div padding-start padding-top padding-bottom>Зал "{{halls[event.hall_id]}}" - {{halls_theme[event.hall_id]}}</div>
+		</div>
+		<div class="star" padding-start padding-bottom>	
+			<div class="star__iner">	
+				<ion-icon name="star"></ion-icon>
+				<ion-icon name="star"></ion-icon>
+				<ion-icon name="star"></ion-icon>
+				<ion-icon name="star"></ion-icon>
+				<ion-icon name="star"></ion-icon>
+				<!-- <span class="ocenka">нет оценок	</span> -->
+			</div>
+		</div>
+		<div>
+			<!-- {{ event.description }} -->
+		</div>
+
+	</ion-item-group>
+	<ion-item-group>
+	    <ion-item-divider text-uppercase color="light">СПИКЕРЫ</ion-item-divider>
+
+		<ion-list>
+		  <ion-item>
+		    <ion-avatar slot="start">
+		    	<ion-icon name="body" style="font-size: 40px;"></ion-icon>
+		      <!-- <img src="/docs/assets/img/avatar-finn.png"></img> -->
+		    </ion-avatar>
+		    <ion-label>
+		      <h2>Сергей Цыпцын</h2>
+		      <h3>Главный</h3>
+		      <p>CG EVENT</p>
+		    </ion-label>
+		  </ion-item>
+		</ion-list>
+	</ion-item-group>
+<!-- {{id}} -->
+</ion-content>
