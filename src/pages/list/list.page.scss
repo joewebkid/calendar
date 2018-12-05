@@ -72,3 +72,7 @@ a {
 	height: 40px;
 	// --background: rgb(249, 207, 42);
 }
+.noactive ion-badge {
+	--background:#f4f5f800!important;
+    --color: #424242!important;
+}

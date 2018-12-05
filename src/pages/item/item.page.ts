@@ -12,35 +12,52 @@ import { ActivatedRoute } from '@angular/router';
 export class ItemPage implements OnInit {
 
   id: string;
-  event = [];
-  public halls = {
-    1: "Красные ворота",
-    2: "Чистые пруды",
-    3: "Полянка",
-    4: "НЕГЛИНКА",
+  event = {
+    id: "", 
+    name: "", 
+    description: "",
+    raiting: 1,
+    date: "",
+    speaker_id: "",
+    time_end: "",
+    time_start: "",
+    hall_id: "",
+    themes: "",
+  };
+  speaker = {
+    id: "", 
+    name: "", 
+    description: "",
+    prof: "",
+    company: "",
+    photo: "",
   };
 
-  public halls_theme = {
-    1: "Игры",
-    2: "Open Source",
-    3: "Разное",
-    4: "BIM-секция",
-  };
+  public halls = []
+  public halls_theme = []
+  hallsIds = {};
+  hallsObject = {};
+  themeDatas = [];
+
   constructor(
     private route: ActivatedRoute,
     private databaseprovider: DatabaseProvider
   ) { 
    
     this.id = this.route.snapshot.paramMap.get('id');
-    databaseprovider.getOneEvent(this.id)
-    this.databaseprovider.getDatabaseState().subscribe(rdy => {
-      if (rdy) {
-        this.event = databaseprovider.eventData[0]
 
-        // alert(    "datas:"+JSON.stringify(  this.event  )     )
-      }
+    databaseprovider.getOneEvent(this.id).then((db) => {
+      this.halls = databaseprovider.halls
+      this.halls_theme = databaseprovider.hallsTheme
+      this.hallsIds = databaseprovider.hallsIds
+      this.hallsObject = databaseprovider.hallsObject
+
+      this.themeDatas = databaseprovider.themeDatas
+
+      this.event = databaseprovider.eventData
+      this.event.date = this.event.date.split(".")[0]
+      this.speaker = databaseprovider.speakerData
     })
-
 
   }
 

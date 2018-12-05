@@ -1,8 +1,9 @@
 import { Component, OnInit, Injectable } from '@angular/core';
-import { Platform } from '@ionic/angular';
+import { Platform,LoadingController } from '@ionic/angular';
 import { Http } from '@angular/http';
 import 'rxjs/add/operator/map';
 import { DatabaseProvider } from './../../providers/database/database';
+import { ActivatedRoute } from '@angular/router';
 
 @Injectable()
 @Component({
@@ -14,14 +15,9 @@ import { DatabaseProvider } from './../../providers/database/database';
 
 export class ListPage implements OnInit {
 
-  // private icons = {
-  //   'игры':1,
-  //   'open-source':2,
-  //   'разное':3,
-  //   'bim-секция':4,
-  // };
 
   public halls = []
+  public halls_theme = []
   // {
   //   1: "Красные ворота1",
   //   2: "Чистые пруды1",
@@ -29,7 +25,6 @@ export class ListPage implements OnInit {
   //   4: "НЕГЛИНКА1",
   // };
 
-  public halls_theme = []
   //   1: "Игры1",
   //   2: "Open Source1",
   //   3: "Разное1",
@@ -39,14 +34,23 @@ export class ListPage implements OnInit {
   events = [];
   eventsArr = {};
   eventsArrTemp = {};
-
+  themeDatas = [];
+  dataLoad:boolean=false;
   hallsIds = {};
   hallsObject = {};
+  dateUrl: string;
+  category="Все";
+  theme="Все";
+
+  themeselect:any
+  categoryselect:any
 
   constructor(
     public http: Http,
     private databaseprovider: DatabaseProvider,
-    private plt: Platform
+    private plt: Platform,
+    private route: ActivatedRoute,
+    public loadingController: LoadingController
    ) { 
     // this.eventsArr = {
     //   18:[{name:"Техническая сторона левел-дизайна, или Как сэкономить деньги и время при разработке локаций",hall_id:1,id:1}],
@@ -63,25 +67,37 @@ export class ListPage implements OnInit {
     //   19:[{name:"m2",hall_id:2,id:2}],
     //   20:[{name:"m",hall_id:1,id:3}],
     // })
-
+      this.dateUrl = this.route.snapshot.paramMap.get('id');
       this.databaseprovider.getDatabaseState().subscribe(rdy => {
+
         if (rdy) {
+// alert("hui")
+          this.dateUrl=this.dateUrl?this.dateUrl:"01.12.2018"
 
-          databaseprovider.getAllevents("01.12.2018").then((db) => {
+          setTimeout(() => {
+          }, 2000);
 
-            this.halls = databaseprovider.halls
-            this.halls_theme = databaseprovider.hallsTheme
-            this.hallsIds = databaseprovider.hallsIds
-            this.hallsObject = databaseprovider.hallsObject
+            databaseprovider.getAllevents().then((db) => {
 
 
-            this.eventsArr = databaseprovider.eventsDatas
-            this.eventsArrTemp = databaseprovider.eventsDatas
-            this.events = Object.keys(databaseprovider.eventsDatas)
+              this.halls = databaseprovider.halls
+              this.halls_theme = databaseprovider.hallsTheme
+              this.hallsIds = databaseprovider.hallsIds
+              this.hallsObject = databaseprovider.hallsObject
 
-            alert("halls_theme        : "+JSON.stringify( this.halls_theme))
+              this.themeDatas = databaseprovider.themeDatas
 
-          })
+              this.eventsArr = databaseprovider.eventsDatas
+              this.eventsArrTemp = databaseprovider.eventsDatas
+              this.events = Object.keys(databaseprovider.eventsDatas)
+              this.dataLoad = true;
+
+              this.changeDate(this.dateUrl)
+              // alert("Меня вызывают!")
+            // alert(JSON.stringify(this.eventsArrTemp))
+
+            })
+
 
 
           // alert(JSON.stringify(this.hallsIds))
@@ -95,27 +111,62 @@ export class ListPage implements OnInit {
           // alert(JSON.stringify(this.eventsArr))
         }
     })
-
-
-    // this.http.get('https://www.reddit.com/r/gifs/new/.json?limit=10').map(res => res.json()).subscribe(data => {
-    //   console.log(data.data.children);
-    // });
-    // this.http.get('http://event.lembos.ru/article/output-json').map(res => res.json()).subscribe(data => {
-    //   console.log(data);
-    //   for (var i = 0; i < data.length; i++) {
-
-    //     databaseprovider.addArticle((data[i].name ,data[i].description ,data[i].raiting ,1111 ,data[i].speaker_id ,data[i].time_end  ,data[i].time_start ))
-    //       // articles.push({ name: data[i].name, skill: data.item(i).text });
-    //     }
-
-    // });
   } 
+
+  public changeDate(date: any) {
+    this.dateUrl = date
+    let eventA = this.eventsArrTemp
+    let eventNewA = {}
+    console.log(eventA)
+
+    this.themeselect = "Все"
+    this.categoryselect = "Все"
+
+    for (var objectKey in eventA) {
+
+      for (var i = 0; i < eventA[objectKey].length; i++) {
+        var value = eventA[objectKey][i].date;
+
+        if(value==date) {
+          // alert("value==targetValue "+targetValue)
+
+          if(eventNewA[objectKey]==undefined) {
+            eventNewA[objectKey]=[]
+          }
+
+          eventNewA[objectKey].push(eventA[objectKey][i]);
+          // alert("[ " + objectKey + "] " + JSON.stringify(eventA[objectKey][i]))
+          // alert("[ OPEN-SOURCE ] " + JSON.stringify(eventNewA))
+        }
+      }
+
+    };
+    
+    this.eventsArr = eventNewA
+    this.events = Object.keys(eventNewA)
+  }
+    // alert(date)
+    // this.databaseprovider.getAllevents(date).then((db) => {
+    //   this.halls = this.databaseprovider.halls
+    //   this.halls_theme = this.databaseprovider.hallsTheme
+    //   this.hallsIds = this.databaseprovider.hallsIds
+    //   this.hallsObject = this.databaseprovider.hallsObject
+
+    //   this.eventsArr = this.databaseprovider.eventsDatas
+    //   this.eventsArrTemp = this.databaseprovider.eventsDatas
+    //   this.events = Object.keys(this.databaseprovider.eventsDatas)
+
+
+    // alert(this.eventsArr)
+    //   this.dataLoad = true;
+    // })
 
   public changeCategory(ev: any) {
 
     let eventA = this.eventsArrTemp
     let eventNewA = {}
     let targetValue = ev.target.value
+    this.category = ev.target.value
     console.log(eventA)
 
 
@@ -123,8 +174,12 @@ export class ListPage implements OnInit {
 
       for (var i = 0; i < eventA[objectKey].length; i++) {
         var value = this.hallsObject[eventA[objectKey][i].hall_id].theme;
+        var date = eventA[objectKey][i].date;
 
-        if(value==targetValue) {
+        var themesArr = eventA[objectKey][i].themes.split(",")
+        var bool = (themesArr.indexOf( this.theme ) != -1)
+
+        if( (value==targetValue||targetValue=="Все") && this.dateUrl==date && !bool ) {
           // alert("value==targetValue "+targetValue)
 
           if(eventNewA[objectKey]==undefined) {
@@ -143,8 +198,55 @@ export class ListPage implements OnInit {
     this.events = Object.keys(eventNewA)
   }
 
-  likeIt(th,id) {
-    console.log(id)
+
+  public changeTheme(ev: any) {
+
+    let eventA = this.eventsArrTemp
+    let eventNewA = {}
+    let targetValue = ev.target.value
+    this.theme = ev.target.value
+    console.log(eventA)
+
+
+    for (var objectKey in eventA) {
+
+      for (var i = 0; i < eventA[objectKey].length; i++) {
+        var value = this.hallsObject[eventA[objectKey][i].hall_id].theme;
+        var date = eventA[objectKey][i].date;
+
+        var themesArr = eventA[objectKey][i].themes.split(",")
+
+          // alert("this.themeSelect " + JSON.stringify(this.themeselect))
+          // alert("eventA[objectKey][i].themes " + JSON.stringify(eventA[objectKey][i].themes))
+          // alert("[ themesArr ] " + JSON.stringify(themesArr))
+        var bool = (themesArr.indexOf( targetValue ) != -1)
+
+        if( (value==this.category||this.category=="Все") && this.dateUrl==date  && !bool ) {
+          // alert("value==targetValue "+targetValue)
+
+          if(eventNewA[objectKey]==undefined) {
+            eventNewA[objectKey]=[]
+          }
+
+          eventNewA[objectKey].push(eventA[objectKey][i]);
+          // alert("[ " + objectKey + "] " + JSON.stringify(eventA[objectKey][i]))
+          // alert("[ OPEN-SOURCE ] " + JSON.stringify(eventNewA))
+        }
+      }
+
+    };
+    
+    this.eventsArr = eventNewA
+    this.events = Object.keys(eventNewA)
+  }
+
+  likeIt(ev: any,id) {
+    if(ev.favoriteBy)
+      this.databaseprovider.addFavorite([id])
+    else
+      this.databaseprovider.removeFavorite([id])
+
+    ev.favoriteBy = !ev.favoriteBy
     return false
   }
 
@@ -167,7 +269,8 @@ export class ListPage implements OnInit {
   }
   ngOnInit() {
 
-  }
+  };
+  
   // add back when alpha.4 is out
   // navigate(item) {
   //   this.router.navigate(['/list', JSON.stringify(item)]);

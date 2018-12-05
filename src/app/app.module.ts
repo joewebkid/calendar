@@ -17,14 +17,19 @@ import { SQLite, SQLiteObject } from '@ionic-native/sqlite/ngx';
 
 import { Platform } from 'ionic-angular';
 
+import { Splash } from '../pages/splash/splash';
+
 @NgModule({
-  declarations: [AppComponent],
-  entryComponents: [],
+  declarations: [
+    AppComponent, 
+    Splash
+  ],
+  entryComponents: [Splash],
   imports: [
     BrowserModule,
     IonicModule.forRoot(),
     AppRoutingModule,
-    HttpModule
+    HttpModule,
   ],
   providers: [
     StatusBar,

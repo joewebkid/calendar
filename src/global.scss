@@ -10,7 +10,12 @@
 @import "~@ionic/angular/css/text-transformation.css";
 @import "~@ionic/angular/css/flex-utils.css";
 
-
+.modal-wrapper {
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+}
 ion-toolbar {
 --background: rgb(243, 194, 3);
 --ion-color-base: rgb(243, 194, 3) !important;

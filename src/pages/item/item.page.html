@@ -14,21 +14,23 @@
 	<ion-item-group>
 		<div>
 			<ion-title padding-start padding-top>{{ event.name }}</ion-title>
-			<div padding-start padding-top>декабря 01, {{ event.time_start }} - {{ event.time_end }}</div>
-			<div padding-start padding-top padding-bottom>Зал "{{halls[event.hall_id]}}" - {{halls_theme[event.hall_id]}}</div>
+			<div padding-start padding-top>декабря {{ event.date }}, {{ event.time_start }} - {{ event.time_end }}</div>
+			<div padding-start padding-top padding-bottom>Зал "{{hallsObject[event.hall_id].name}}" - {{hallsObject[event.hall_id].theme}}</div>
 		</div>
 		<div class="star" padding-start padding-bottom>	
 			<div class="star__iner">	
-				<ion-icon name="star"></ion-icon>
-				<ion-icon name="star"></ion-icon>
-				<ion-icon name="star"></ion-icon>
-				<ion-icon name="star"></ion-icon>
-				<ion-icon name="star"></ion-icon>
+				<ion-icon name="star" [color]="event.raiting>0?'danger':''"></ion-icon>
+				<ion-icon name="star" [color]="event.raiting>1?'danger':''"></ion-icon>
+				<ion-icon name="star" [color]="event.raiting>2?'danger':''"></ion-icon>
+				<ion-icon name="star" [color]="event.raiting>3?'danger':''"></ion-icon>
+				<ion-icon name="star" [color]="event.raiting>4?'danger':''"></ion-icon>
 				<!-- <span class="ocenka">нет оценок	</span> -->
 			</div>
 		</div>
 		<div>
-			<!-- {{ event.description }} -->
+			<div padding-start padding-bottom>	
+				{{ event.description }}
+			</div>
 		</div>
 
 	</ion-item-group>
@@ -38,13 +40,13 @@
 		<ion-list>
 		  <ion-item>
 		    <ion-avatar slot="start">
-		    	<ion-icon name="body" style="font-size: 40px;"></ion-icon>
-		      <!-- <img src="/docs/assets/img/avatar-finn.png"></img> -->
+		    	<!-- <ion-icon name="body" style="font-size: 40px;"></ion-icon> -->
+		     	<img src="{{speaker.photo}}" style="border-radius: 50%;width: 50px; height: 50px;">
 		    </ion-avatar>
 		    <ion-label>
-		      <h2>Сергей Цыпцын</h2>
-		      <h3>Главный</h3>
-		      <p>CG EVENT</p>
+		      <h2>{{speaker.name}}</h2>
+		      <h3>{{speaker.prof}}</h3>
+		      <p>{{speaker.company}}</p>
 		    </ion-label>
 		  </ion-item>
 		</ion-list>

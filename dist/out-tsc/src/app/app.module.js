@@ -18,18 +18,22 @@ var database_1 = require("../providers/database/database");
 var http_1 = require("@angular/http");
 var ngx_3 = require("@ionic-native/sqlite/ngx");
 var ionic_angular_1 = require("ionic-angular");
+var splash_1 = require("../pages/splash/splash");
 var AppModule = /** @class */ (function () {
     function AppModule() {
     }
     AppModule = __decorate([
         core_1.NgModule({
-            declarations: [app_component_1.AppComponent],
-            entryComponents: [],
+            declarations: [
+                app_component_1.AppComponent,
+                splash_1.Splash
+            ],
+            entryComponents: [splash_1.Splash],
             imports: [
                 platform_browser_1.BrowserModule,
                 angular_1.IonicModule.forRoot(),
                 app_routing_module_1.AppRoutingModule,
-                http_1.HttpModule
+                http_1.HttpModule,
             ],
             providers: [
                 ngx_2.StatusBar,

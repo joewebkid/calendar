@@ -17,7 +17,8 @@ var ItemPage = /** @class */ (function () {
         var _this = this;
         this.route = route;
         this.databaseprovider = databaseprovider;
-        this.event = [];
+        this.event = {};
+        this.speaker = {};
         this.halls = {
             1: "Красные ворота",
             2: "Чистые пруды",
@@ -34,7 +35,8 @@ var ItemPage = /** @class */ (function () {
         databaseprovider.getOneEvent(this.id);
         this.databaseprovider.getDatabaseState().subscribe(function (rdy) {
             if (rdy) {
-                _this.event = databaseprovider.eventData[0];
+                _this.event = databaseprovider.eventData;
+                _this.speaker = databaseprovider.speakerData;
                 // alert(    "datas:"+JSON.stringify(  this.event  )     )
             }
         });

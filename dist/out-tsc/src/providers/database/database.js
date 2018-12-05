@@ -21,10 +21,15 @@ var DatabaseProvider = /** @class */ (function () {
         this.http = http;
         this.plt = plt;
         this.eventsDatas = [];
-        this.eventData = [];
+        this.eventData = {};
+        this.speakerData = {};
+        this.themeDatas = {};
         this.halls = [];
         this.hallsTheme = [];
+        this.hallsObject = {};
         this.hallsIds = {};
+        this.readyBase = false;
+        this.currentDate = "";
         this.url = 'http://event.lembos.ru/article/output-json';
         this.databaseReady = new Rx_1.BehaviorSubject(false);
         this.plt.ready().then(function () {
@@ -41,13 +46,44 @@ var DatabaseProvider = /** @class */ (function () {
             return db;
         });
     };
-    DatabaseProvider.prototype.getAllevents = function () {
+    /**
+     * Get all favorites rows from event
+     * @param datas
+     * @return bool|array
+     * @throws exception
+     */
+    DatabaseProvider.prototype.getAllFavorite = function () {
         var _this = this;
-        return this.database.executeSql("SELECT * FROM events", []).then(function (data) {
+        return this.database.executeSql("SELECT * FROM favorite", []).then(function (data) {
+            var favorites = [];
+            if (data.rows.length > 0) {
+                for (var i = 0; i < data.rows.length; i++) {
+                    favorites.push(data.rows.item(i).event_id);
+                }
+                _this.getAllevents(' WHERE `id` IN (' + favorites.join(',') + ')');
+            }
+        });
+    };
+    /**
+     * Get all rows from event
+     * @param datas
+     * @return bool|array
+     * @throws exception
+     */
+    DatabaseProvider.prototype.getAllevents = function (sql) {
+        var _this = this;
+        if (sql === void 0) { sql = ''; }
+        return this.database.executeSql("SELECT * FROM eventsTable" + sql, []).then(function (data) {
+            if (Object.keys(_this.eventsDatas).length > 0) {
+                return false;
+            }
+            var bool = false;
             var events = {};
             var hall = [];
             var hallTheme = [];
             var hallsIds = {};
+            var hallsObject = {};
+            var themeDatas = [];
             if (data.rows.length > 0) {
                 for (var i = 0; i < data.rows.length; i++) {
                     if (events[data.rows.item(i).time_start] == undefined || events == []) {
@@ -63,34 +99,71 @@ var DatabaseProvider = /** @class */ (function () {
                         time_end: data.rows.item(i).time_end,
                         time_start: data.rows.item(i).time_start,
                         hall_id: data.rows.item(i).hall_id,
+                        themes: data.rows.item(i).themes,
                     });
-                    // alert("get: "+data.rows.item(i).time_start+" "+JSON.stringify(events[data.rows.item(i).time_start]))
                 }
-            }
-            _this.database.executeSql("SELECT * FROM halls", []).then(function (hallData) {
-                if (hallData.rows.length > 0) {
-                    for (var i = 0; i < hallData.rows.length; i++) {
-                        hall.push(hallData.rows.item(i).name);
-                        hallTheme.push(hallData.rows.item(i).theme);
-                        hallsIds[hallData.rows.item(i).name] = hallData.rows.item(i).id;
+                _this.database.executeSql("SELECT * FROM halls", []).then(function (hallData) {
+                    if (hallData.rows.length > 0) {
+                        for (var i = 0; i < hallData.rows.length; i++) {
+                            if (hallsObject[data.rows.item(i).id] == undefined || hallsObject == {}) {
+                                hallsObject[data.rows.item(i).id] = {};
+                            }
+                            hallsObject[hallData.rows.item(i).id] = {
+                                name: hallData.rows.item(i).name,
+                                theme: hallData.rows.item(i).theme,
+                            };
+                            hall.push(hallData.rows.item(i).name);
+                            hallTheme.push(hallData.rows.item(i).theme);
+                            hallsIds[hallData.rows.item(i).name] = hallData.rows.item(i).id;
+                        }
                     }
-                }
-                // alert("hall: "+JSON.stringify(hall))
-                _this.halls = hall;
-                _this.hallsIds = hall;
-                _this.hallsTheme = hallTheme;
-                _this.eventsDatas = events;
-                _this.databaseReady.next(true);
-                return events;
-            });
+                    _this.database.executeSql("SELECT * FROM themes", []).then(function (themeData) {
+                        if (themeData.rows.length > 0) {
+                            for (var i = 0; i < themeData.rows.length; i++) {
+                                themeDatas.push({
+                                    id: themeData.rows.item(i).id,
+                                    name: themeData.rows.item(i).name,
+                                });
+                            }
+                        }
+                        _this.themeDatas = themeDatas;
+                        if (_this.eventsDatas != events)
+                            bool = true;
+                        _this.hallsObject = hallsObject;
+                        _this.hallsIds = hallsIds;
+                        _this.hallsTheme = hallTheme;
+                        _this.halls = hall;
+                        _this.eventsDatas = events;
+                        if (bool)
+                            _this.databaseReady.next(true);
+                        return events;
+                    });
+                });
+            }
+            else {
+                _this.getAllevents().then(function (data) {
+                });
+                return false;
+            }
+        })
+            .catch(function (e) {
+            // alert("e:"+JSON.stringify(  (e)  ))
+            _this.getAllevents();
         });
     };
+    /**
+     * Get one row from event
+     * @param datas
+     * @return bool|array
+     * @throws exception
+     */
     DatabaseProvider.prototype.getOneEvent = function (id) {
-        // alert("getAllevents")
         var _this = this;
-        return this.database.executeSql("SELECT * FROM events WHERE id=" + id, []).then(function (data) {
-            var events = [];
-            events = [{
+        return this.database.executeSql("SELECT * FROM eventsTable WHERE id=" + id, []).then(function (data) {
+            return _this.database.executeSql("SELECT * FROM speakers WHERE id=" + data.rows.item(0).speaker_id, []).then(function (dataSpeaker) {
+                var events = {};
+                var speakers = {};
+                events = {
                     id: data.rows.item(0).id,
                     name: data.rows.item(0).name,
                     description: data.rows.item(0).description,
@@ -100,76 +173,206 @@ var DatabaseProvider = /** @class */ (function () {
                     time_end: data.rows.item(0).time_end,
                     time_start: data.rows.item(0).time_start,
                     hall_id: data.rows.item(0).hall_id,
-                }];
-            _this.eventData = events;
-            _this.databaseReady.next(true);
-            return events;
+                    themes: data.rows.item(0).themes,
+                };
+                speakers = {
+                    id: dataSpeaker.rows.item(0).id,
+                    name: dataSpeaker.rows.item(0).name,
+                    description: dataSpeaker.rows.item(0).description,
+                    prof: dataSpeaker.rows.item(0).prof,
+                    company: dataSpeaker.rows.item(0).company,
+                    photo: dataSpeaker.rows.item(0).photo,
+                };
+                _this.eventData = events;
+                _this.speakerData = speakers;
+                _this.databaseReady.next(true);
+                return events;
+            });
         });
     };
+    /**
+     * Init databases
+     * @param datas
+     * @return bool|array
+     * @throws exception
+     */
     DatabaseProvider.prototype.createDatabases = function () {
         var _this = this;
         return this.getDB().then(function (db) {
-            db.executeSql('CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT,' +
-                'description TEXT,raiting INTEGER,date TEXT,speaker_id INTEGER,time_end TEXT,time_start TEXT,hall_id INTEGER)', [])
+            db.executeSql('CREATE TABLE IF NOT EXISTS eventsTable(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT,' +
+                'description TEXT,raiting INTEGER,date TEXT,speaker_id INTEGER,time_end TEXT,time_start TEXT,hall_id INTEGER,themes TEXT)', [])
                 .then(function () {
                 db.executeSql('CREATE TABLE IF NOT EXISTS halls(id INTEGER,name TEXT,' +
                     'theme TEXT, date TEXT)', [])
                     .then(function () {
-                    _this.database.executeSql('DELETE FROM events;', []).then(function () {
-                        _this.database.executeSql('DELETE FROM halls;', []).then(function () {
-                            _this.fullEvents();
+                    db.executeSql('CREATE TABLE IF NOT EXISTS speakers(id INTEGER,name TEXT,' +
+                        'description TEXT, prof TEXT, company TEXT, photo TEXT)', [])
+                        .then(function () {
+                        db.executeSql('CREATE TABLE IF NOT EXISTS themes(id INTEGER,name TEXT)', [])
+                            .then(function () {
+                            db.executeSql('CREATE TABLE IF NOT EXISTS favorites(event_id INTEGER)', [])
+                                .then(function () {
+                                // this.database.executeSql('DELETE FROM eventsTable;',[]).then(() => {
+                                //   this.database.executeSql('DELETE FROM halls;',[]).then(() => {
+                                //     this.database.executeSql('DELETE FROM speakers;',[]).then(() => {
+                                //       this.database.executeSql('DELETE FROM themes;',[]).then(() => {
+                                _this.fullEvents();
+                                _this.getAllevents().then(function (data) {
+                                    _this.databaseReady.next(true);
+                                });
+                                //       })
+                                //     })
+                                //   })
+                                // })
+                                // .catch(e => {alert("error2:"+JSON.stringify(  (e)  ))}  )
+                            });
                         });
-                    })
-                        .catch(function (e) { alert("error2:" + JSON.stringify((e))); });
+                    });
                 });
             })
                 .catch(function (e) { alert("error:" + JSON.stringify((e))); });
         })
             .catch(function (e) { return alert("error2:" + JSON.stringify(e)); });
     };
+    /**
+     * Get data from site, and add to database
+     * @param datas
+     * @return bool|array
+     * @throws exception
+     */
     DatabaseProvider.prototype.fullEvents = function () {
         var _this = this;
-        this.databaseReady.next(false);
         this.http.get('http://event.lembos.ru/article/output-json').map(function (res) { return res.json(); }).subscribe(function (data) {
             for (var i = 0; i < data.length; i++) {
-                _this.addArticle([data[i].name, data[i].description, data[i].raiting, 1111, data[i].speaker_id, data[i].time_end, data[i].time_start, data[i].hall_id]);
+                _this.addArticle([data[i].name, data[i].description, data[i].raiting, data[i].date, data[i].speaker_id, data[i].time_end, data[i].time_start, data[i].hall_id, data[i].themes]);
             }
             _this.http.get('http://event.lembos.ru/hall/output-json').map(function (res) { return res.json(); }).subscribe(function (data) {
                 for (var i = 0; i < data.length; i++) {
                     _this.addHall([data[i].id, data[i].mainHall, data[i].theme, data[i].date]);
                 }
-                _this.getAllevents();
-                _this.databaseReady.next(true);
+                _this.http.get('http://event.lembos.ru/speaker/output-json').map(function (res) { return res.json(); }).subscribe(function (data) {
+                    for (var i = 0; i < data.length; i++) {
+                        _this.addSpeaker([data[i].id, data[i].name, data[i].description, data[i].prof, data[i].company, data[i].photo]);
+                    }
+                    _this.http.get('http://event.lembos.ru/theme/output-json').map(function (res) { return res.json(); }).subscribe(function (data) {
+                        for (var i = 0; i < data.length; i++) {
+                            _this.addTheme([data[i].id, data[i].name]);
+                        }
+                        // this.databaseReady.next(true);
+                    });
+                });
             });
         });
     };
+    /**
+     * Create new event
+     * @param datas
+     * @return bool|array
+     * @throws exception
+     */
     DatabaseProvider.prototype.addArticle = function (datas) {
-        return this.database.executeSql('INSERT INTO events(name ,description ,raiting ,date ,speaker_id ,time_end  ,time_start ,hall_id ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)', datas).then(function (data) {
-            //       if(this.eventData[datas.time_start.split(':')[0]]==undefined||this.eventData==[]) {
-            //         //datas.time_start.split(':')[0]
-            //         this.eventData[datas.time_start.split(':')[0]]=[]
-            //       }
-            //       this.eventData[datas.time_start.split(':')[0]].push({ 
-            //         id: datas.id, 
-            //         name: datas.name, 
-            //         description: datas.description,
-            //         raiting: datas.raiting,
-            //         date: datas.date,
-            //         speaker_id: datas.speaker_id,
-            //         time_end: datas.speaker_id,
-            //         time_start: datas.speaker_id,
-            //       });
-            // alert("addArticle: "+JSON.stringify(this.eventData))
-            return data;
-        }, function (err) {
-            return err;
+        var _this = this;
+        this.database.executeSql("SELECT * FROM eventsTable WHERE `name`='" + datas[0] + "'", []).then(function (eventData) {
+            if (eventData.rows.length == 0) {
+                return _this.database.executeSql('INSERT INTO eventsTable(name ,description ,raiting ,date ,speaker_id ,time_end  ,time_start ,hall_id, themes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', datas).then(function (data) {
+                    return data;
+                }, function (err) {
+                    return err;
+                });
+            }
+        })
+            .catch(function (e) {
+            if (e.code == 5) {
+            }
         });
     };
+    /**
+     * Adds in favorites
+     * @param datas
+     * @return bool|array
+     * @throws exception
+     */
+    DatabaseProvider.prototype.addFavorite = function (datas) {
+        var _this = this;
+        this.database.executeSql("SELECT * FROM favorites WHERE `event_id`='" + datas[0] + "'", []).then(function (favoritesData) {
+            if (favoritesData.rows.length == 0) {
+                return _this.database.executeSql('INSERT INTO favorites(event_id) VALUES (?)', datas).then(function (data) {
+                    return data;
+                }, function (err) {
+                    return err;
+                });
+            }
+        })
+            .catch(function (e) {
+            if (e.code == 5) {
+            }
+        });
+    };
+    /**
+     * Create new theme
+     * @param datas
+     * @return bool|array
+     * @throws exception
+     */
+    DatabaseProvider.prototype.addTheme = function (datas) {
+        var _this = this;
+        this.database.executeSql("SELECT * FROM themes WHERE `name`='" + datas[1] + "'", []).then(function (themesData) {
+            if (themesData.rows.length == 0) {
+                return _this.database.executeSql('INSERT INTO themes(id ,name ) VALUES (?, ?)', datas).then(function (data) {
+                    return data;
+                }, function (err) {
+                    return err;
+                });
+            }
+        })
+            .catch(function (e) {
+            if (e.code == 5) {
+            }
+        });
+    };
+    /**
+     * Create new hall
+     * @param datas
+     * @return bool|array
+     * @throws exception
+     */
     DatabaseProvider.prototype.addHall = function (datas) {
-        return this.database.executeSql('INSERT INTO hall(id ,name ,theme ,date ) VALUES (?, ?, ?, ?)', datas).then(function (data) {
-            return data;
-        }, function (err) {
-            return err;
+        var _this = this;
+        this.database.executeSql("SELECT * FROM halls WHERE `name`='" + datas[1] + "'", []).then(function (hallsData) {
+            if (hallsData.rows.length == 0) {
+                return _this.database.executeSql('INSERT INTO halls(id ,name ,theme ,date ) VALUES (?, ?, ?, ?)', datas).then(function (data) {
+                    return data;
+                }, function (err) {
+                    return err;
+                });
+            }
+        })
+            .catch(function (e) {
+            if (e.code == 5) {
+            }
+        });
+    };
+    /**
+     * Create new speaker
+     * @param datas
+     * @return bool|array
+     * @throws exception
+     */
+    DatabaseProvider.prototype.addSpeaker = function (datas) {
+        var _this = this;
+        this.database.executeSql("SELECT * FROM speakers WHERE `name`='" + datas[1] + "'", []).then(function (speakersData) {
+            if (speakersData.rows.length == 0) {
+                return _this.database.executeSql('INSERT INTO speakers(id ,name ,description ,prof  ,company  ,photo ) VALUES (?, ?, ?, ?, ?, ?)', datas).then(function (data) {
+                    return data;
+                }, function (err) {
+                    return err;
+                });
+            }
+            // alert(  "already exist: "+JSON.stringify(  (datas[1])  )   )
+        })
+            .catch(function (e) {
+            if (e.code == 5) {
+            }
         });
     };
     DatabaseProvider.prototype.getDatabaseState = function () {

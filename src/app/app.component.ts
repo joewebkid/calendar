@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
 
-import { Platform } from '@ionic/angular';
+import { Platform, ModalController } from '@ionic/angular';
 import { SplashScreen } from '@ionic-native/splash-screen/ngx';
 import { StatusBar } from '@ionic-native/status-bar/ngx';
+import { Splash } from '../pages/splash/splash';
 
 @Component({
   selector: 'app-root',
@@ -15,11 +16,11 @@ export class AppComponent {
     //   url: '/home',
     //   icon: 'home'
     // },
-    {
-      title: 'Расписание ver.2',
-      url: '/home',
-      icon: 'home'
-    },
+    // {
+    //   title: 'Расписание ver.2',
+    //   url: '/home',
+    //   icon: 'home'
+    // },
     {
       title: 'Расписание',
       url: '/list',
@@ -32,6 +33,11 @@ export class AppComponent {
       title: 'Карта',
       url: '/map',
       icon: 'map'
+    },
+    {
+      title: 'Избранное',
+      url: '/favorites',
+      icon: 'heart'
     },
     {
       title: 'Спонсоры',
@@ -49,19 +55,32 @@ export class AppComponent {
       icon: 'information-circle'
     }
   ];
-
+  
+  showSplash = true;
   constructor(
     private platform: Platform,
     private splashScreen: SplashScreen,
-    private statusBar: StatusBar
+    private statusBar: StatusBar,
+    private modalCtrl: ModalController
   ) {
     this.initializeApp();
   }
 
   initializeApp() {
     this.platform.ready().then(() => {
-      this.statusBar.styleDefault();
-      this.splashScreen.hide();
+      this.statusBar.styleDefault(); 
+
+      this.presentModal()
     });
+  }
+
+  async presentModal() {
+
+    const modal = await this.modalCtrl.create({
+      component: Splash,
+      // componentProps: { value: 123 }
+    });
+    return await modal.present();
+
   }
 }

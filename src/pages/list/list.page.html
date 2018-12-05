@@ -4,11 +4,12 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-buttons slot="end">
+<!--     <ion-buttons slot="end">
       <ion-button routerLink="/search">
         <ion-icon name="search"></ion-icon>
       </ion-button>
-    </ion-buttons>
+    </ion-buttons> -->
+    
 <!--     <ion-buttons slot="start"> 
       <ion-back-button defaultHref="home"></ion-back-button> 
     </ion-buttons> color="primary" -->
@@ -18,25 +19,60 @@
   </ion-toolbar>
   <ion-toolbar color="" class="days">
 
-    <ion-buttons slot="start">
+
+    <ion-buttons slot="start" *ngIf="dateUrl!='02.12.2018'">
       <ion-button>
         <ion-badge color="light">
-          СБ 1
+          СБ 1 Суббота
+        </ion-badge>
+      </ion-button>
+      <ion-button class="noactive" (click)="changeDate('02.12.2018')">
+
+        <ion-badge>
+          ВС 2 Воскресенье
+        </ion-badge>
+
+      </ion-button>
+    </ion-buttons>
+
+    <ion-buttons slot="start" *ngIf="dateUrl=='02.12.2018'">
+      <ion-button class="noactive" (click)="changeDate('01.12.2018')">
+        <ion-badge>
+          СБ 1 Суббота
         </ion-badge>
       </ion-button>
       <ion-button>
-        <div>ВС</div>
-        <div>2</div>
+
+        <ion-badge color="light">
+          ВС 2 Воскресенье
+        </ion-badge>
+
       </ion-button>
     </ion-buttons>
 
   </ion-toolbar>
 
     <ion-item>
-      <ion-label>Тема</ion-label>
-      <ion-select [interfaceOptions]="customPopoverOptions" interface="popover" placeholder="Выберите одну" (ionChange)="changeCategory($event)">
+      <ion-label>Зал</ion-label>
+      <ion-select [(ngModel)]="categoryselect" interface="popover" placeholder="Выберите одну" (ionChange)="changeCategory($event)">
 
-        <ion-select-option style=" border-left: 3px solid #F44336; " *ngFor="let theme of halls_theme; let y = index" value="{{theme}}">
+        <ion-select-option style=" border-left: 3px solid #F44336; " value="Все">Все
+        </ion-select-option>
+        <ion-select-option style=" border-left: 3px solid #F44336; " *ngFor="let hall of halls_theme; let y = index" value="{{hall}}">{{halls[y]}}
+        </ion-select-option>
+
+
+      </ion-select>
+    </ion-item>
+
+
+    <ion-item>
+      <ion-label>Тема</ion-label>
+      <ion-select [(ngModel)]="themeselect" interface="popover" placeholder="Выберите одну" (ionChange)="changeTheme($event)">
+
+        <ion-select-option style=" border-left: 3px solid #F44336; " value="Все">Все
+        </ion-select-option>
+        <ion-select-option style=" border-left: 3px solid #F44336; " *ngFor="let theme of themeDatas; let y = index" value="{{theme.value}}">{{theme.name}}
         </ion-select-option>
 
 
@@ -49,9 +85,16 @@
 
 <ion-content>
 
+  <div *ngIf="!dataLoad" style="margin: 20px auto;width: 35px;"><ion-spinner></ion-spinner></div>
 
-  <ion-refresher [disabled]="false" (ionRefresh)="doRefresh($event)">
-    <ion-refresher-content></ion-refresher-content>
+  <ion-refresher (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content 
+          pullingText="Pull to refresh"
+          pullingIcon="arrow-up"
+          refreshingSpinner="crescent">
+
+    </ion-refresher-content>
+
   </ion-refresher>
 
   <ion-item-group *ngFor="let key of events; let i = index">
@@ -65,11 +108,18 @@
               
             <div class="overflow__text">
               <p> {{ev.time_start}} - {{ev.time_end}}, Зал "{{hallsObject[ev.hall_id].name}}" - {{hallsObject[ev.hall_id].theme}}</p>
+              <ion-badge *ngFor="let themesEv of ev.themes">
+              {{themesEv}}
+              </ion-badge>
             </div>
+
+          </div>
+          <div>
           </div>
         </ion-item>
-        <ion-button class="like button button-clear hydrated" (click)="likeIt($item,ev.id)" >
-          <ion-icon name="heart-empty"></ion-icon>  
+        <ion-button class="like button button-clear hydrated" (click)="likeIt(ev,ev.id)">
+          <ion-icon name="heart-empty" *ngIf="ev.favoriteBy"></ion-icon>  
+          <ion-icon name="heart" *ngIf="!ev.favoriteBy"></ion-icon>  
         </ion-button>
       <!-- </a> -->
     </ion-item>

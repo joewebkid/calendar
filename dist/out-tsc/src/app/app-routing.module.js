@@ -23,6 +23,10 @@ var routes = [
         loadChildren: '../pages/list/list.module#ListPageModule'
     },
     {
+        path: 'list/:id',
+        loadChildren: '../pages/list/list.module#ListPageModule'
+    },
+    {
         path: 'item/:id',
         loadChildren: '../pages/item/item.module#ItemPageModule'
     },
@@ -37,7 +41,7 @@ var routes = [
     { path: 'favorites', loadChildren: '../pages/favorites/favorites.module#FavoritesPageModule' },
     { path: 'map', loadChildren: '../pages/map/map.module#MapPageModule' },
     { path: 'snonsors', loadChildren: '../pages/snonsors/snonsors.module#SnonsorsPageModule' },
-    { path: 'schema', loadChildren: '../pages/schema/schema.module#SchemaPageModule' }
+    { path: 'schema', loadChildren: '../pages/schema/schema.module#SchemaPageModule' },
 ];
 var AppRoutingModule = /** @class */ (function () {
     function AppRoutingModule() {

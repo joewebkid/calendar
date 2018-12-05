@@ -14,8 +14,43 @@ var angular_1 = require("@ionic/angular");
 var http_1 = require("@angular/http");
 require("rxjs/add/operator/map");
 var database_1 = require("./../../providers/database/database");
+var router_1 = require("@angular/router");
 var ListPage = /** @class */ (function () {
-    function ListPage(http, databaseprovider, plt) {
+    function ListPage(http, databaseprovider, plt, route, loadingController) {
+        var _this = this;
+        this.http = http;
+        this.databaseprovider = databaseprovider;
+        this.plt = plt;
+        this.route = route;
+        this.loadingController = loadingController;
+        // private icons = {
+        //   'игры':1,
+        //   'open-source':2,
+        //   'разное':3,
+        //   'bim-секция':4,
+        // };
+        this.halls = [];
+        // {
+        //   1: "Красные ворота1",
+        //   2: "Чистые пруды1",
+        //   3: "Полянка1",
+        //   4: "НЕГЛИНКА1",
+        // };
+        this.halls_theme = [];
+        //   1: "Игры1",
+        //   2: "Open Source1",
+        //   3: "Разное1",
+        //   4: "BIM-секция1",
+        // };
+        this.events = [];
+        this.eventsArr = {};
+        this.eventsArrTemp = {};
+        this.themeDatas = [];
+        this.dataLoad = false;
+        this.hallsIds = {};
+        this.hallsObject = {};
+        this.category = "Все";
+        this.theme = "Все";
         // this.eventsArr = {
         //   18:[{name:"Техническая сторона левел-дизайна, или Как сэкономить деньги и время при разработке локаций",hall_id:1,id:1}],
         //   19:[{name:"m2",hall_id:2,id:2}],
@@ -31,40 +66,26 @@ var ListPage = /** @class */ (function () {
         //   19:[{name:"m2",hall_id:2,id:2}],
         //   20:[{name:"m",hall_id:1,id:3}],
         // })
-        var _this = this;
-        this.http = http;
-        this.databaseprovider = databaseprovider;
-        this.plt = plt;
-        // private icons = {
-        //   'игры':1,
-        //   'open-source':2,
-        //   'разное':3,
-        //   'bim-секция':4,
-        // };
-        this.halls = {
-            1: "Красные ворота1",
-            2: "Чистые пруды1",
-            3: "Полянка1",
-            4: "НЕГЛИНКА1",
-        };
-        this.halls_theme = {
-            1: "Игры1",
-            2: "Open Source1",
-            3: "Разное1",
-            4: "BIM-секция1",
-        };
-        this.events = [];
-        this.eventsArr = {};
-        this.eventsArrTemp = {};
-        this.hallsIds = {};
+        this.dateUrl = this.route.snapshot.paramMap.get('id');
         this.databaseprovider.getDatabaseState().subscribe(function (rdy) {
             if (rdy) {
-                _this.halls = databaseprovider.halls;
-                _this.halls_theme = databaseprovider.hallsTheme;
-                _this.hallsIds = databaseprovider.hallsIds;
-                _this.eventsArr = databaseprovider.eventsDatas;
-                _this.eventsArrTemp = databaseprovider.eventsDatas;
-                _this.events = Object.keys(databaseprovider.eventsDatas);
+                // alert("hui")
+                _this.dateUrl = _this.dateUrl ? _this.dateUrl : "01.12.2018";
+                databaseprovider.getAllevents(" WHERE `id` IN (106,107)").then(function (db) {
+                    _this.halls = databaseprovider.halls;
+                    _this.halls_theme = databaseprovider.hallsTheme;
+                    _this.hallsIds = databaseprovider.hallsIds;
+                    _this.hallsObject = databaseprovider.hallsObject;
+                    _this.themeDatas = databaseprovider.themeDatas;
+                    _this.eventsArr = databaseprovider.eventsDatas;
+                    _this.eventsArrTemp = databaseprovider.eventsDatas;
+                    _this.events = Object.keys(databaseprovider.eventsDatas);
+                    _this.dataLoad = true;
+                    _this.changeDate(_this.dateUrl);
+                    // alert(JSON.stringify(this.eventsArrTemp))
+                });
+                // alert(JSON.stringify(this.hallsIds))
+                // alert(JSON.stringify(this.hallsObject))
                 // for (var i = 0; i < this.events.length; i++) {
                 //   alert("keys {"+i+"} "+this.events[i])
                 //   alert("values {"+i+"} "+JSON.stringify(this.eventsArr[this.events[i]]) )
@@ -72,59 +93,127 @@ var ListPage = /** @class */ (function () {
                 // alert(JSON.stringify(this.eventsArr))
             }
         });
-        // this.http.get('https://www.reddit.com/r/gifs/new/.json?limit=10').map(res => res.json()).subscribe(data => {
-        //   console.log(data.data.children);
-        // });
-        // this.http.get('http://event.lembos.ru/article/output-json').map(res => res.json()).subscribe(data => {
-        //   console.log(data);
-        //   for (var i = 0; i < data.length; i++) {
-        //     databaseprovider.addArticle((data[i].name ,data[i].description ,data[i].raiting ,1111 ,data[i].speaker_id ,data[i].time_end  ,data[i].time_start ))
-        //       // articles.push({ name: data[i].name, skill: data.item(i).text });
-        //     }
-        // });
     }
-    ListPage.prototype.changeCategory = function (ev) {
+    ListPage.prototype.changeDate = function (date) {
+        this.dateUrl = date;
         var eventA = this.eventsArrTemp;
         var eventNewA = {};
         console.log(eventA);
-        Object.keys(eventA).map(function (objectKey, index) {
+        this.themeselect = "Все";
+        this.categoryselect = "Все";
+        for (var objectKey in eventA) {
             for (var i = 0; i < eventA[objectKey].length; i++) {
-                var value = eventA[objectKey][i].hall_id;
-                if (value == ev.target.value) {
+                var value = eventA[objectKey][i].date;
+                if (value == date) {
+                    // alert("value==targetValue "+targetValue)
                     if (eventNewA[objectKey] == undefined) {
                         eventNewA[objectKey] = [];
                     }
-                    eventNewA[objectKey][i] = eventA[objectKey][i];
+                    eventNewA[objectKey].push(eventA[objectKey][i]);
+                    // alert("[ " + objectKey + "] " + JSON.stringify(eventA[objectKey][i]))
+                    // alert("[ OPEN-SOURCE ] " + JSON.stringify(eventNewA))
                 }
             }
-        });
-        alert("eventNewA " + JSON.stringify(eventNewA));
+        }
+        ;
         this.eventsArr = eventNewA;
+        this.events = Object.keys(eventNewA);
+    };
+    // alert(date)
+    // this.databaseprovider.getAllevents(date).then((db) => {
+    //   this.halls = this.databaseprovider.halls
+    //   this.halls_theme = this.databaseprovider.hallsTheme
+    //   this.hallsIds = this.databaseprovider.hallsIds
+    //   this.hallsObject = this.databaseprovider.hallsObject
+    //   this.eventsArr = this.databaseprovider.eventsDatas
+    //   this.eventsArrTemp = this.databaseprovider.eventsDatas
+    //   this.events = Object.keys(this.databaseprovider.eventsDatas)
+    // alert(this.eventsArr)
+    //   this.dataLoad = true;
+    // })
+    ListPage.prototype.changeCategory = function (ev) {
+        var eventA = this.eventsArrTemp;
+        var eventNewA = {};
+        var targetValue = ev.target.value;
+        this.category = ev.target.value;
+        console.log(eventA);
+        for (var objectKey in eventA) {
+            for (var i = 0; i < eventA[objectKey].length; i++) {
+                var value = this.hallsObject[eventA[objectKey][i].hall_id].theme;
+                var date = eventA[objectKey][i].date;
+                var themesArr = eventA[objectKey][i].themes.split(",");
+                var bool = (themesArr.indexOf(this.theme) != -1);
+                if ((value == targetValue || targetValue == "Все") && this.dateUrl == date && !bool) {
+                    // alert("value==targetValue "+targetValue)
+                    if (eventNewA[objectKey] == undefined) {
+                        eventNewA[objectKey] = [];
+                    }
+                    eventNewA[objectKey].push(eventA[objectKey][i]);
+                    // alert("[ " + objectKey + "] " + JSON.stringify(eventA[objectKey][i]))
+                    // alert("[ OPEN-SOURCE ] " + JSON.stringify(eventNewA))
+                }
+            }
+        }
+        ;
+        this.eventsArr = eventNewA;
+        this.events = Object.keys(eventNewA);
+    };
+    ListPage.prototype.changeTheme = function (ev) {
+        var eventA = this.eventsArrTemp;
+        var eventNewA = {};
+        var targetValue = ev.target.value;
+        this.theme = ev.target.value;
+        console.log(eventA);
+        for (var objectKey in eventA) {
+            for (var i = 0; i < eventA[objectKey].length; i++) {
+                var value = this.hallsObject[eventA[objectKey][i].hall_id].theme;
+                var date = eventA[objectKey][i].date;
+                var themesArr = eventA[objectKey][i].themes.split(",");
+                // alert("this.themeSelect " + JSON.stringify(this.themeselect))
+                // alert("eventA[objectKey][i].themes " + JSON.stringify(eventA[objectKey][i].themes))
+                // alert("[ themesArr ] " + JSON.stringify(themesArr))
+                var bool = (themesArr.indexOf(targetValue) != -1);
+                if ((value == this.category || this.category == "Все") && this.dateUrl == date && !bool) {
+                    // alert("value==targetValue "+targetValue)
+                    if (eventNewA[objectKey] == undefined) {
+                        eventNewA[objectKey] = [];
+                    }
+                    eventNewA[objectKey].push(eventA[objectKey][i]);
+                    // alert("[ " + objectKey + "] " + JSON.stringify(eventA[objectKey][i]))
+                    // alert("[ OPEN-SOURCE ] " + JSON.stringify(eventNewA))
+                }
+            }
+        }
+        ;
+        this.eventsArr = eventNewA;
+        this.events = Object.keys(eventNewA);
     };
     ListPage.prototype.likeIt = function (th, id) {
-        console.log(id);
+        alert(id);
+        this.databaseprovider.addFavorite(id);
+        alert(JSON.stringify(th));
+        alert(JSON.stringify(th.target));
+        // 
         return false;
-    };
-    ListPage.prototype.wait = function (e) {
-        var myEl = angular.element(document.querySelector('#div1'));
-        myEl.addClass('alpha');
     };
     ListPage.prototype.doRefresh = function (refresher) {
         // console.log('Begin async operation', refresher);
-        //   this.databaseprovider.fullEvents()
-        //   this.databaseprovider.getDatabaseState().subscribe(rdy => {
-        //     if (rdy) {
-        //       this.events = this.databaseprovider.eventsDatas
-        //       alert(JSON.stringify(this.events))
-        //       refresher.target.complete();
-        //     }
-        //   })
+        var _this = this;
+        this.databaseprovider.fullEvents();
+        this.databaseprovider.getDatabaseState().subscribe(function (rdy) {
+            if (rdy) {
+                _this.events = _this.databaseprovider.eventsDatas;
+                // alert(JSON.stringify(this.events))
+                refresher.target.complete();
+            }
+        });
         //  setTimeout(() => {
         //   console.log('Async operation has ended');
         // }, 2000);
     };
     ListPage.prototype.ngOnInit = function () {
     };
+    ;
     ListPage = __decorate([
         core_1.Injectable(),
         core_1.Component({
@@ -135,7 +224,9 @@ var ListPage = /** @class */ (function () {
         }),
         __metadata("design:paramtypes", [http_1.Http,
             database_1.DatabaseProvider,
-            angular_1.Platform])
+            angular_1.Platform,
+            router_1.ActivatedRoute,
+            angular_1.LoadingController])
     ], ListPage);
     return ListPage;
 }());

@@ -11,15 +11,20 @@ export class DatabaseProvider {
 
   private databaseReady: BehaviorSubject<boolean>;
   database: SQLiteObject;
-  eventsDatas:any = [];
-  eventData:any =[];
+  eventsDatas:any = {};
+  eventData:any ={};
+  speakerData:any ={};
+  themeDatas:any ={};
   halls:any =[];
   hallsTheme:any =[];
+
+  dataFavorites = []
 
 
   hallsObject:any ={};
   hallsIds:any ={};
   readyBase:any = false;
+  currentDate = "";
 
   url: string = 'http://event.lembos.ru/article/output-json';
   constructor(
@@ -47,138 +52,308 @@ export class DatabaseProvider {
     })
   }
 
-  public getAllevents(date):any{ 
-alert(3)
-    return this.database.executeSql("SELECT * FROM events", []).then((data) => {
-
-      let events = {};
-      let hall = [];
-      let hallTheme = [];
-
-      let hallsIds ={};
-      let hallsObject ={};
-
+ 
+  /**
+   * Get all favorites ids
+   * @param datas
+   * @return bool|array
+   * @throws exception
+   */  
+  getAllFavoritesIds():any {
+    return this.database.executeSql("SELECT * FROM favorites", []).then((data) => {
+      var favorites = []
       if (data.rows.length > 0) {
         for (var i = 0; i < data.rows.length; i++) {
-
-          if(data.rows.item(i).date==date) {
-
-            // alert( "date: " + data.rows.item(i).date + " ]" + data.rows.item(i).name + "[ " )
-            if(events[data.rows.item(i).time_start]==undefined||events==[]) {
-              events[data.rows.item(i).time_start]=[]
-            }
-
-            events[data.rows.item(i).time_start].push({
-              id: data.rows.item(i).id, 
-              name: data.rows.item(i).name, 
-              description: data.rows.item(i).description,
-              raiting: data.rows.item(i).raiting,
-              date: data.rows.item(i).date,
-              speaker_id: data.rows.item(i).speaker_id,
-              time_end: data.rows.item(i).time_end,
-              time_start: data.rows.item(i).time_start,
-              hall_id: data.rows.item(i).hall_id,
-            });
-          }
-
-          // alert("get: "+data.rows.item(i).time_start+" "+JSON.stringify(events[data.rows.item(i).time_start]))
-
-        }
+          favorites.push(data.rows.item(i).event_id)
+        } 
+        this.dataFavorites = favorites
+        return favorites;
       }
+    })
+  }
 
-      this.database.executeSql("SELECT * FROM halls", []).then((hallData) => {
-        if (hallData.rows.length > 0) {
-          for (var i = 0; i < hallData.rows.length; i++) {
-
-            if(hallsObject[data.rows.item(i).id]==undefined||hallsObject=={}) {
-              hallsObject[data.rows.item(i).id]={}
-            }
-            hallsObject[hallData.rows.item(i).id] = {
-              name:hallData.rows.item(i).name,
-              theme:hallData.rows.item(i).theme,
-            };
-
-            hall.push(hallData.rows.item(i).name);
-            hallTheme.push(hallData.rows.item(i).theme);
-
-            hallsIds[hallData.rows.item(i).name] = hallData.rows.item(i).id
-
-          }
+  /**
+   * Get all favorites rows from event
+   * @param datas
+   * @return bool|array
+   * @throws exception
+   */  
+  getAllFavoritesEvents():any {
+    return this.database.executeSql("SELECT * FROM favorites", []).then((data) => {
+      var favorites = [];
+      var events = {};
+      // alert(JSON.stringify(data))
+      if (data.rows.length > 0) {
+        for (var i = 0; i < data.rows.length; i++) {
+          favorites.push(data.rows.item(i).event_id);
         }
+        // alert("favorites: "+JSON.stringify(  (favorites)  ));
+        return this.database.executeSql("SELECT * FROM eventsTable" + ' WHERE `id` IN ('+favorites.join(',')+')', []).then((data) => {
+          this.eventsDatas = this.setEvents(data.rows)
 
-        // alert("hall: "+JSON.stringify(hall))
-        // alert("hallsObject: "+JSON.stringify(hallsObject))
-        // alert("hallsTheme: "+JSON.stringify(hallTheme))
-        // alert("hallsIds: "+JSON.stringify(hallsIds))
-        // alert("eventsDatas: "+JSON.stringify(events))
+        })
+      }else{
+        this.eventsDatas = [];
+      }
+    })
+  }
 
-        this.hallsObject = hallsObject;
-        this.hallsIds = hallsIds;
+  /**
+   * Set all rows from event
+   * @param datas
+   * @return bool|array
+   * @throws exception
+   */ 
+  public setEvents(data, dataFavorites=[]):any{ 
+    let events = {};
+    // alert("favorites: "+JSON.stringify(  (dataFavorites)  ))
+    for (var i = 0; i < data.length; i++) {
+        let evItem = data.item(i);
+        if(events[evItem.time_start]==undefined||events==[]) { events[evItem.time_start]=[] }
 
-        this.hallsTheme = hallTheme;
-        this.halls = hall;
+        let favoriteBy = !(dataFavorites.indexOf( evItem.id ) != -1);
+      
+    // alert("favoriteBy: "+JSON.stringify(  (favoriteBy)  ))
+        events[evItem.time_start].push({
+          id          : evItem.id, 
+          name        : evItem.name, 
+          description : evItem.description,
+          raiting     : evItem.raiting,
+          date        : evItem.date,
+          speaker_id  : evItem.speaker_id,
+          time_end    : evItem.time_end,
+          time_start  : evItem.time_start,
+          hall_id     : evItem.hall_id,
+          themes      : evItem.themes,
+          favoriteBy  : favoriteBy,
+        });
+    }
+    return events;
+  }
 
-        this.eventsDatas = events;
+  /**
+   * Get all rows from event
+   * @param datas
+   * @return bool|array
+   * @throws exception
+   */ 
+  public getAllevents():any{ 
 
-        // this.databaseReady.next(true);
-        return events;
+    return this.database.executeSql("SELECT * FROM eventsTable", []).then((data) => {
+      this.getAllFavoritesIds().then(() => {
+        let bool = false;
+        let events = [];
+        let hall = [];
+        let hallTheme = [];
+
+        let hallsIds = {};
+        let hallsObject = {};
+
+        let themeDatas = [];
+
+        if (data.rows.length > 0) {
+
+          events = this.setEvents(data.rows, this.dataFavorites)
+
+          // if(sql) {
+          //   if(Object.keys(this.eventsDatas).length !== Object.keys(events).length){
+          //     bool=true;
+          //   }
+
+          //   this.eventsDatas = events;
+
+          //   // if(bool){
+          //   //   this.databaseReady.next(true);
+          //   // }
+          //   return false;
+          // }
+
+          this.database.executeSql("SELECT * FROM halls", []).then((hallData) => {
+            if (hallData.rows.length > 0) {
+              for (var i = 0; i < hallData.rows.length; i++) {
+
+                let hallRowItem = hallData.rows.item(i)
+
+                if(hallsObject[hallRowItem.id]==undefined||hallsObject=={}) { hallsObject[hallRowItem.id]={} }
+
+                hallsObject[hallRowItem.id] = {
+                  name  : hallRowItem.name,
+                  theme : hallRowItem.theme,
+                };
+
+                hall.push(hallRowItem.name);
+                hallTheme.push(hallRowItem.theme);
+
+                hallsIds[hallRowItem.name] = hallRowItem.id
+
+              }
+            }
+
+            let themeDataTemp = {};
+            this.database.executeSql("SELECT * FROM themes", []).then((themeData) => {
+              if (themeData.rows.length > 0) {
+                for (var i = 0; i < themeData.rows.length; i++) {
+                  themeDatas.push({
+                    id   : themeData.rows.item(i).id,
+                    name : themeData.rows.item(i).name
+                  });
+                  themeDataTemp[themeData.rows.item(i).id]=themeData.rows.item(i).name
+                }
+              }
+
+
+              for(var index in events) { 
+                var ev = events[index]; 
+                for (var i = ev.length - 1; i >= 0; i--) {
+                  let themesTemp = ev[i].themes.split(",")
+                  let themesTempNew = []
+                  for (var y = themesTemp.length - 1; y >= 0; y--) {
+                    if(themeDataTemp[themesTemp[y]]!=null)
+                    themesTempNew.push(themeDataTemp[themesTemp[y]]);
+                  }                
+                  // alert("themesTempNew: "+JSON.stringify(  themesTempNew  ))
+                  ev[i].themes = themesTempNew
+                }
+                events[index] = ev; 
+              }
+             
+
+              this.themeDatas = themeDatas
+
+
+              if(Object.keys(this.eventsDatas).length !== Object.keys(events).length){
+                bool=true;
+              }
+              // alert(Object.keys(this.eventsDatas).length + " || " + Object.keys(events).length + " || " + bool)
+
+              this.hallsObject = hallsObject;
+              this.hallsIds = hallsIds;
+
+              this.hallsTheme = hallTheme;
+              this.halls = hall;
+
+              this.eventsDatas = events;
+
+              if(bool){
+                this.databaseReady.next(true);
+                this.databaseReady.next(true);
+              }
+
+              return events;
+
+            }) 
+          }).catch(e => {
+            // alert("e:"+JSON.stringify(  e  ))
+          })
+
+        } else {
+          this.getAllevents().then((data) => {
+          })
+          return false;
+        }
       })
-
+    })
+    .catch(e => {
+      // alert("e:"+JSON.stringify(  (e)  ))
+      this.getAllevents() 
     })
 
   }
 
+  /**
+   * Get one row from event
+   * @param datas
+   * @return bool|array
+   * @throws exception
+   */ 
   public getOneEvent(id):any{ 
 
-// alert("getAllevents")
+    return this.database.executeSql("SELECT * FROM eventsTable WHERE id="+id, []).then((data) => {
+      return this.database.executeSql("SELECT * FROM speakers WHERE id="+data.rows.item(0).speaker_id, []).then((dataSpeaker) => {
 
-    return this.database.executeSql("SELECT * FROM events WHERE id="+id, []).then((data) => {
+        let events = {};
+        let speakers = {};
 
-      let events = [];
+        events = { 
+          id: data.rows.item(0).id, 
+          name: data.rows.item(0).name, 
+          description: data.rows.item(0).description,
+          raiting: data.rows.item(0).raiting,
+          date: data.rows.item(0).date,
+          speaker_id: data.rows.item(0).speaker_id,
+          time_end: data.rows.item(0).time_end,
+          time_start: data.rows.item(0).time_start,
+          hall_id: data.rows.item(0).hall_id,
+          themes: data.rows.item(0).themes,
+        };
 
-      events = [{ 
-        id: data.rows.item(0).id, 
-        name: data.rows.item(0).name, 
-        description: data.rows.item(0).description,
-        raiting: data.rows.item(0).raiting,
-        date: data.rows.item(0).date,
-        speaker_id: data.rows.item(0).speaker_id,
-        time_end: data.rows.item(0).time_end,
-        time_start: data.rows.item(0).time_start,
-        hall_id: data.rows.item(0).hall_id,
-      }];
+        speakers = { 
+          id: dataSpeaker.rows.item(0).id, 
+          name: dataSpeaker.rows.item(0).name, 
+          description: dataSpeaker.rows.item(0).description,
+          prof: dataSpeaker.rows.item(0).prof,
+          company: dataSpeaker.rows.item(0).company,
+          photo: dataSpeaker.rows.item(0).photo,
+        };
 
-      this.eventData = events;
-      this.databaseReady.next(true);
-      return events;
+        this.eventData = events;
+        this.speakerData = speakers;
+        this.databaseReady.next(true);
+        return events;
+      })
     })
 
   }
+
+  /**
+   * Init databases
+   * @param datas
+   * @return bool|array
+   * @throws exception
+   */ 
   public createDatabases():any{
 
     return this.getDB().then((db: SQLiteObject) => {
 
-      db.executeSql('CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT,'+
-        'description TEXT,raiting INTEGER,date TEXT,speaker_id INTEGER,time_end TEXT,time_start TEXT,hall_id INTEGER)', [])
+      db.executeSql('CREATE TABLE IF NOT EXISTS eventsTable(id INTEGER PRIMARY KEY AUTOINCREMENT,name TEXT,'+
+        'description TEXT,raiting INTEGER,date TEXT,speaker_id INTEGER,time_end TEXT,time_start TEXT,hall_id INTEGER,themes TEXT)', [])
           .then(() => {
 
             db.executeSql('CREATE TABLE IF NOT EXISTS halls(id INTEGER,name TEXT,'+
             'theme TEXT, date TEXT)', [])
               .then(() => {
+              db.executeSql('CREATE TABLE IF NOT EXISTS speakers(id INTEGER,name TEXT,'+
+              'description TEXT, prof TEXT, company TEXT, photo TEXT)', [])
+                .then(() => {
+                db.executeSql('CREATE TABLE IF NOT EXISTS themes(id INTEGER,name TEXT)', [])
+                  .then(() => {
+                  db.executeSql('CREATE TABLE IF NOT EXISTS favorites(event_id INTEGER)', [])
+                    .then(() => {
 
 
-              this.database.executeSql('DELETE FROM events;',[]).then(() => {
-                this.database.executeSql('DELETE FROM halls;',[]).then(() => {
+                  // this.database.executeSql('DELETE FROM favorites;',[]).then(() => {
+                  //   this.database.executeSql('DELETE FROM eventsTable;',[]).then(() => {
+                  //     this.database.executeSql('DELETE FROM halls;',[]).then(() => {
+                  //       this.database.executeSql('DELETE FROM speakers;',[]).then(() => {
+                  //         this.database.executeSql('DELETE FROM themes;',[]).then(() => {
 
-                  this.fullEvents()
-                  alert(2)
-                  this.databaseReady.next(true);
 
+                            this.fullEvents()
+                            this.getAllevents().then((data) => {
+                              this.databaseReady.next(true);
+                            })
+
+                  //         })
+                  //       })
+                  //     })
+                  //   })
+                  // })
+                  // .catch(e => {alert("error2:"+JSON.stringify(  (e)  ))}  )
+
+
+                  })
                 })
               })
-              .catch(e => {alert("error2:"+JSON.stringify(  (e)  ))}  )
-
-
             })
 
         }
@@ -190,13 +365,19 @@ alert(3)
     .catch(e => alert("error2:"+JSON.stringify(e)));
   }
 
+  /**
+   * Get data from site, and add to database
+   * @param datas
+   * @return bool|array
+   * @throws exception
+   */ 
   public fullEvents() {
 
     this.http.get( 'http://event.lembos.ru/article/output-json' ).map(res => res.json()).subscribe(data => {
 
       for (var i = 0; i < data.length; i++) {
 
-        this.addArticle([data[i].name ,data[i].description ,data[i].raiting ,data[i].date ,data[i].speaker_id ,data[i].time_end  ,data[i].time_start ,data[i].hall_id ])
+        this.addArticle([data[i].name ,data[i].description ,data[i].raiting ,data[i].date ,data[i].speaker_id ,data[i].time_end  ,data[i].time_start ,data[i].hall_id ,data[i].themes ])
 
       }
       this.http.get( 'http://event.lembos.ru/hall/output-json' ).map(res => res.json()).subscribe(data => {
@@ -206,44 +387,186 @@ alert(3)
           this.addHall([data[i].id ,data[i].mainHall ,data[i].theme ,data[i].date ])
 
         }
-        alert(1)
-        this.databaseReady.next(true);
+
+
+        this.http.get( 'http://event.lembos.ru/speaker/output-json' ).map(res => res.json()).subscribe(data => {
+          
+          for (var i = 0; i < data.length; i++) {
+
+            this.addSpeaker([data[i].id ,data[i].name ,data[i].description ,data[i].prof  ,data[i].company  ,data[i].photo ])
+
+          }
+
+          this.http.get( 'http://event.lembos.ru/theme/output-json' ).map(res => res.json()).subscribe(data => {
+            
+            for (var i = 0; i < data.length; i++) {
+
+              this.addTheme([data[i].id ,data[i].name])
+
+            }
+            // this.databaseReady.next(true);
+
+          })
+        })
+
 
       })
 
     });
   }
+
+  /**
+   * Create new event
+   * @param datas
+   * @return bool|array
+   * @throws exception
+   */
   public addArticle(datas) {
-    return this.database.executeSql('INSERT INTO events(name ,description ,raiting ,date ,speaker_id ,time_end  ,time_start ,hall_id ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',datas).then(data => {
-//       if(this.eventData[datas.time_start.split(':')[0]]==undefined||this.eventData==[]) {
-//         //datas.time_start.split(':')[0]
-//         this.eventData[datas.time_start.split(':')[0]]=[]
-//       }
+    this.database.executeSql("SELECT * FROM eventsTable WHERE `name`='"+datas[0]+"'", []).then((eventData) => {
 
-//       this.eventData[datas.time_start.split(':')[0]].push({ 
-//         id: datas.id, 
-//         name: datas.name, 
-//         description: datas.description,
-//         raiting: datas.raiting,
-//         date: datas.date,
-//         speaker_id: datas.speaker_id,
-//         time_end: datas.speaker_id,
-//         time_start: datas.speaker_id,
-//       });
+      if (eventData.rows.length == 0) {
 
-// alert("addArticle: "+JSON.stringify(this.eventData))
-      return data;
-    }, err => {
-      return err;
+        return this.database.executeSql('INSERT INTO eventsTable(name ,description ,raiting ,date ,speaker_id ,time_end  ,time_start ,hall_id, themes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',datas).then(data => {
+          return data;
+        }, err => {
+          return err;
+        });
+
+      }
+    })
+    .catch(e => {
+      if(e.code==5) {
+      }
+
+    });
+  }
+
+  /**
+   * Adds in favorites
+   * @param datas
+   * @return bool|array
+   * @throws exception
+   */
+  public addFavorite(datas) {
+    this.database.executeSql("SELECT * FROM favorites WHERE `event_id`='"+datas[0]+"'", []).then((favoritesData) => {
+
+      if (favoritesData.rows.length == 0) {
+
+        return this.database.executeSql('INSERT INTO favorites(event_id) VALUES (?)',datas).then(data => {
+          return data;
+        }, err => {
+          return err;
+        });
+
+      }
+    })
+    .catch(e => {
+      if(e.code==5) {
+      }
+
     });
   } 
-  public addHall(datas) {
-    return this.database.executeSql('INSERT INTO halls(id ,name ,theme ,date ) VALUES (?, ?, ?, ?)',datas).then(data => {
 
-      return data;
-    }, err => {
-      return err;
+  /**
+   * Adds in favorites
+   * @param datas
+   * @return bool|array
+   * @throws exception
+   */
+  public removeFavorite(datas) {
+    this.database.executeSql("SELECT * FROM favorites WHERE `event_id`='"+datas[0]+"'", []).then((favoritesData) => {
+
+      if (favoritesData.rows.length != 0) {
+
+        return this.database.executeSql("DELETE FROM favorites WHERE `event_id`='"+datas[0]+"'",[]).then(data => {
+          return data;
+        }, err => {
+          return err;
+        });
+
+      }
+    })
+    .catch(e => {
+      if(e.code==5) {
+      }
+
     });
+  } 
+
+  /**
+   * Create new theme
+   * @param datas
+   * @return bool|array
+   * @throws exception
+   */  
+  public addTheme(datas) {
+    this.database.executeSql("SELECT * FROM themes WHERE `name`='"+datas[1]+"'", []).then((themesData) => {
+
+      if (themesData.rows.length == 0) {
+
+        return this.database.executeSql('INSERT INTO themes(id ,name ) VALUES (?, ?)',datas).then(data => {
+          return data;
+        }, err => {
+          return err;
+        });
+
+      }
+
+    })
+    .catch(e => {
+      if(e.code==5) {
+      }
+    })
+  }
+
+  /**
+   * Create new hall
+   * @param datas
+   * @return bool|array
+   * @throws exception
+   */  
+  public addHall(datas) {
+    this.database.executeSql("SELECT * FROM halls WHERE `name`='"+datas[1]+"'", []).then((hallsData) => {
+
+      if (hallsData.rows.length == 0) {
+
+        return this.database.executeSql('INSERT INTO halls(id ,name ,theme ,date ) VALUES (?, ?, ?, ?)',datas).then(data => {
+          return data;
+        }, err => {
+          return err;
+        });
+
+      }
+
+    })
+    .catch(e => {
+      if(e.code==5) {
+      }
+    })
+  }
+
+  /**
+   * Create new speaker
+   * @param datas
+   * @return bool|array
+   * @throws exception
+   */
+  public addSpeaker(datas) {
+    this.database.executeSql("SELECT * FROM speakers WHERE `name`='"+datas[1]+"'", []).then((speakersData) => {
+
+      if (speakersData.rows.length == 0) {
+        return this.database.executeSql('INSERT INTO speakers(id ,name ,description ,prof  ,company  ,photo ) VALUES (?, ?, ?, ?, ?, ?)',datas).then(data => {
+          return data;
+        }, err => {
+          return err;
+        });
+      }
+        // alert(  "already exist: "+JSON.stringify(  (datas[1])  )   )
+    })
+    .catch(e => {
+      if(e.code==5) {
+      }
+    })
   }
 
   getDatabaseState() {
